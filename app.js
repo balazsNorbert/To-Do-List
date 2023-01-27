@@ -33,28 +33,33 @@ const item3 = new Item ({
 
 const defaultItems = [item1,item2,item3];
 
-Item.insertMany(defaultItems,function(err){
-  if(err){
-    console.log(err);
-  }else{
-    console.log("Succesfully saved default items to DB");
-  }
-});
 
 app.get("/", function(req, res){
   const day = date.getDate();
 
-  res.render("list",{listTitle: day,newListItems:items});
+  Item.find({},function(err,foundItems){
+    if(foundItems.length === 0){
+      Item.insertMany(defaultItems,function(err){
+        if(err){
+          console.log(err);
+        }else{
+          console.log("Succesfully saved default items to DB");
+        }
+    });
+    res.redirect("/");
+  }else{
+      res.render("list",{listTitle: day,newListItems:foundItems});
+  }
+  });
 });
 
 app.post("/",function(req,res){
-  const item = req.body.newItem;
-  if(req.body.list === "work"){
-    workItems.push(item);
-  }else{
-    items.push(item);
-    res.redirect("/");
-  }
+  const itemName = req.body.newItem;
+  item = new Item({
+    name: itemName
+  });
+  item.save();
+  res.redirect("/");
 });
 
 app.get("/work",function(req,res){
